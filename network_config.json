@@ -1,0 +1,11 @@
+{
+  "network_config": {
+    "n_hidden_layers": 3,
+    "n_in_channels": 2,
+    "n_kernels": 32,
+    "kernel_size": 3
+  },
+  "learning_rate": 1e-3,
+  "weight_decay": 1e-5,
+  "results_path": "C:\\Users\\kacpe\\Desktop\\results"
+}

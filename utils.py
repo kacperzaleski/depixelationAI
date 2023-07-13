@@ -2,6 +2,25 @@ import torch
 import numpy as np
 
 import numpy as np
+import os
+from matplotlib import pyplot as plt
+from torchvision.transforms import transforms
+
+
+def plot(inputs, targets, predictions, path, update):
+    """Plotting the inputs, targets and predictions to file ``path``."""
+    os.makedirs(path, exist_ok=True)
+    fig, axes = plt.subplots(ncols=3, figsize=(15, 5))
+
+    for i in range(len(inputs)):
+        for ax, data, title in zip(axes, [inputs, targets, predictions], ["Input", "Target", "Prediction"]):
+            ax.clear()
+            ax.set_title(title)
+            ax.imshow(data[i, 0], cmap="gray", interpolation="none")
+            ax.set_axis_off()
+        fig.savefig(os.path.join(path, f"{update:07d}_{i:02d}.png"), dpi=100)
+
+    plt.close(fig)
 
 
 def linearize_color_channel(c: float) -> float:
@@ -92,26 +111,28 @@ def stack_with_padding(batch_as_list: list):
         max_values.append(max(values))
     shape = (len(batch_as_list),) + tuple(max_values)
 
-    stacked_pixelated_images = []
+    stacked_full_images = []
     stacked_known_arrays = []
     target_arrays = []
     image_files = []
 
     for item in batch_as_list:
-        pixelated_image, known_array, target_array, image_file = item
+        full_image, known_array, target_array, image_file = item
 
-        padded_pixelated_image = np.zeros(shape[1:], dtype=pixelated_image.dtype)
-        padded_pixelated_image[:, :pixelated_image.shape[1], :pixelated_image.shape[2]] = pixelated_image
-        stacked_pixelated_images.append(padded_pixelated_image)
+        padded_full_image = np.zeros(shape[1:], dtype=full_image.dtype)
+        padded_full_image[:, :full_image.shape[1], :full_image.shape[2]] = full_image
+        stacked_full_images.append(padded_full_image)
 
-        padded_known_array = np.ones(shape[1:], dtype=known_array.dtype)
-        padded_known_array[:, :known_array.shape[1], :known_array.shape[2]] = known_array
-        stacked_known_arrays.append(padded_known_array)
+        # takes shape of full image instead of known array
+        # padded_known_array = np.zeros(shape[1:], dtype=known_array.dtype)
+        # padded_known_array[:, :known_array.shape[1], :known_array.shape[2]] = known_array
+
+        stacked_known_arrays.append(known_array)
 
         target_arrays.append(torch.tensor(target_array))
         image_files.append(image_file)
 
-    stacked_pixelated_images = torch.tensor(np.array(stacked_pixelated_images))
+    stacked_full_images = torch.tensor(np.array(stacked_full_images))
     stacked_known_arrays = torch.tensor(np.array(stacked_known_arrays))
 
-    return stacked_pixelated_images, stacked_known_arrays, target_arrays, image_files
+    return stacked_full_images, stacked_known_arrays, target_arrays, image_files
